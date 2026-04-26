@@ -1,0 +1,7 @@
+import camion.*
+
+describe "test 1" {
+  test "description" {
+    
+  }
+}
