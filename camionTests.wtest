@@ -1,7 +1,42 @@
 import camion.*
 
 describe "test 1" {
-  test "description" {
+  test "cosas varias" {
+    camion.cargar(bumblebee)
+    arenaAGranel.pesoArena(50)
+    camion.cargar(arenaAGranel)
     
+    
+
+    assert.that(camion.todoElPesoEsPar())
+    assert.that(camion.hayAlgoQuePese(55))
+  }
+}
+
+describe "test 2" {
+  test "peso y exceso de peso" {
+     camion.cargar(bumblebee)
+     paqueteDeLadrillos.cantidadDeLadrillos(300)
+     camion.cargar(paqueteDeLadrillos)
+
+     assert.notThat(camion.estaExcedido())
+  }
+}
+
+describe "test 2.0" {
+  test "peso y exceso de peso" {
+     camion.cargar(bumblebee)
+     paqueteDeLadrillos.cantidadDeLadrillos(400)
+     camion.cargar(paqueteDeLadrillos)
+
+     assert.that(camion.estaExcedido())
+  }
+}
+
+describe "test 3" {
+  test "hay cosa peligrosa" {
+    camion.cargar(knightRider)
+
+    assert.equals(knightRider, camion.cosaPeligrosa(10))
   }
 }
