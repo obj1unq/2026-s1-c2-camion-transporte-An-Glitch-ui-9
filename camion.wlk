@@ -4,10 +4,10 @@ object camion {
   const tara = 1000
 		
   method cargar(unaCosa) {
-	  if (self.elArticuloEstaCargado(unaCosa)){
+	  if (not self.elArticuloEstaCargado(unaCosa)){
 	  	cosas.add(unaCosa)
 	  } else{
-	  	self.error("No se puede cargar: "+ unaCosa + " porque ya está cargado.")
+	  	self.error("No se puede cargar: "+ unaCosa +" porque ya está cargado.")
 	  }	
   }
     //No se puede cargar algo ya cargado ni descargar lo que no contiene el camión.  
@@ -35,8 +35,12 @@ object camion {
     return cosas.any({c => (c.peso() == kilos)})
   }
 
+  method pesoTotal() {
+    return tara + (cosas.map({c => c.peso()}).sum())
+  }
+
   method estaExcedido() {
-    return (tara + (cosas.map({c => c.peso()}).sum())) > 2500
+    return self.pesoTotal() > 2500
   }
 
   method cosaPeligrosa(peligrosidad) {
@@ -62,7 +66,41 @@ object camion {
   method puedeCircularEnRuta(peligrosidad) {
     return self.estaExcedido() && self.hayCosaPeligrosa(peligrosidad)
   }
+
+  method tieneAlgoQuePeseEntre(minimo, maximo) {
+    return cosas.any({c => c.peso() >= minimo && c.peso() <= maximo})
+  }
+
+  method cosaMasPesada() {
+    return if (cosas.isEmpty()){
+      self.error("El camión no cuenta con algo pesado :(")
+    } else{
+        cosas.max({c => c.peso()})
+      }
+  }
+
+  method listadoDePesos() {
+    return cosas.map({c => c.peso()})
+  }
+
+  method totalBultos() {
+
+    return (cosas.map({c => c.totalBultos()})).sum()
+  }
+
+  method accidente() {
+    cosas.forEach({c => c.sufreAccidente()})
+  }
+
+  method transportar(destino, camino) {
+    if (camino.puedeCircular(self)){
+      destino.almacenarCosas(cosas)
+    } else{
+      self.error("El camino no puede soportar el Viaje :(")
+    }
+  }
 }
+
 // ========================================= COSAS ==========================================
 object knightRider {
   method peso() { 
@@ -71,6 +109,14 @@ object knightRider {
 
   method nivelPeligrosidad() { 
 	  return 10 
+  }
+
+  method totalBultos() {
+    return 1
+  }
+
+  method sufreAccidente() {
+    // nada
   }
 }
 
@@ -87,6 +133,14 @@ object arenaAGranel {
 
   method peso() {
     return peso
+  }
+
+  method totalBultos() {
+    return 1
+  }
+
+  method sufreAccidente() {
+    peso = peso + 20
   }
 }
 
@@ -109,6 +163,14 @@ object bumblebee {
   method transformacion() {
 	  estaTransformado = not estaTransformado
   }
+
+  method totalBultos() {
+    return 2
+  }
+
+  method sufreAccidente() {
+    estaTransformado = not estaTransformado
+  }
 }
 
 object paqueteDeLadrillos {
@@ -129,6 +191,25 @@ object paqueteDeLadrillos {
 
   method ladrillos() {
 	  return cantidadDeLadrillos
+  }
+
+  method totalBultos() {   // usa 1 bulto hasta 100 ladrillos, 2 bultos si son de 101 a 300 ladrillos, 3 bultos si son 301 o más ladrillos.
+
+    return if (cantidadDeLadrillos <= 100){
+      1
+    } else if (cantidadDeLadrillos >= 101 && cantidadDeLadrillos <= 300){
+      2
+    } else {   // cantidadDeLadrillos >= 301
+      3
+    }
+  }
+
+  method sufreAccidente() {
+    if (cantidadDeLadrillos >= 12){
+      cantidadDeLadrillos = 12 - cantidadDeLadrillos
+    } else{
+      cantidadDeLadrillos = 0
+    }
   }
 }
 
@@ -155,6 +236,18 @@ object bateriaAntiaerea {
   method portaMisiles() {
 	  tieneMisiles = not tieneMisiles
   }
+
+  method totalBultos() {
+    return if (not tieneMisiles){
+      1
+    } else{
+      2
+    }
+  }
+
+  method sufreAccidente() {
+   tieneMisiles = not tieneMisiles 
+  }
 }
 
 object residuosRadioactivos {
@@ -171,6 +264,14 @@ object residuosRadioactivos {
 
   method peso() {
 	  return peso
+  }
+
+  method totalBultos() {
+    return 1
+  }
+
+  method sufreAccidente() {
+    peso = peso + 15
   }
 }
 
@@ -196,6 +297,14 @@ object contenedorPortuario {
   method carga(cosa) {
     cosas.add(cosa)
   }
+
+  method totalBultos() {
+    return 1 + cosas.map({c => c.totalBultos()}).sum()
+  }
+
+  method sufreAccidente() {
+    cosas.forEach({c => c.sufreAccidente()})
+  }
 }
 
 object embalajeDeSeguridad {
@@ -211,5 +320,42 @@ object embalajeDeSeguridad {
 
   method nivelPeligrosidad() {
     return cosaEnvuelta.nivelPeligrosidad() / 2
+  }
+
+  method totalBultos() {
+    return 2
+  }
+
+  method sufreAccidente() {
+    // nada
+  }
+}
+
+// ========================== ALMACEN =========================
+object almacen {
+  const almacen = #{}
+
+  method almacenarCosas(cosas) {
+    almacen.add(cosas)
+  }
+}
+
+// ==================== RUTAS / CAMINOS =====================
+object ruta9 {
+  method puedeCircular(vehiculo) {
+    return vehiculo.puedeCircularEnRuta(20)
+  }
+}
+
+object caminosVecinales {
+  var pesoPermitido = 0
+
+
+  method puedeCircular(vehiculo) {
+    return vehiculo.pesoTotal() <= pesoPermitido
+  }
+
+  method pesoPermitido(peso) {
+    pesoPermitido = peso
   }
 }
