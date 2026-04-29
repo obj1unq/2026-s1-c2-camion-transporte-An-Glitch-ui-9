@@ -64,7 +64,8 @@ object camion {
   }
 
   method puedeCircularEnRuta(peligrosidad) {
-    return self.estaExcedido() && self.hayCosaPeligrosa(peligrosidad)
+    //return self.estaExcedido() && self.hayCosaPeligrosa(peligrosidad)
+    return not self.estaExcedido() && self.cosasPeligrosas(peligrosidad).isEmpty()
   }
 
   method tieneAlgoQuePeseEntre(minimo, maximo) {
