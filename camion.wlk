@@ -4,23 +4,30 @@ object camion {
   const tara = 1000
 		
   method cargar(unaCosa) {
-	  if (not self.elArticuloEstaCargado(unaCosa)){
-	  	cosas.add(unaCosa)
-	  } else{
-	  	self.error("No se puede cargar: "+ unaCosa +" porque ya está cargado.")
-	  }	
+    self.validarCargar(unaCosa)
+	  cosas.add(unaCosa)
+  }	  
+
+  method validarCargar(unaCosa) {
+	  if (self.elArticuloEstaCargado(unaCosa)) {
+      self.error("No se puede cargar: "+ unaCosa +" porque ya está cargado.")
+    }
   }
-    //No se puede cargar algo ya cargado ni descargar lo que no contiene el camión.  
+
   method descargar(unaCosa) {
-   if (self.elArticuloEstaCargado(unaCosa)) {
-	    cosas.remove(unaCosa)
-   } else {
-	    self.error("No se puede descargar: " + unaCosa)
-   }
+    self.validarDescargar(unaCosa)
+	  cosas.remove(unaCosa)
+  }
+
+  method validarDescargar(unaCosa) {
+    if (not self.elArticuloEstaCargado(unaCosa)) {
+      self.error("No se puede descargar: " + unaCosa + "porque no está cargado.")
+    }
   }
 
   method elArticuloEstaCargado(articulo) {
-	  return cosas.any({a => a == articulo})
+	  //return cosas.any({a => a == articulo})
+    return cosas.contains(articulo)
   }
 
   method carga() {
@@ -28,7 +35,8 @@ object camion {
   }
 
   method todoElPesoEsPar() {
-    return ((cosas.map({c => c.peso()}).sum()) % 2) == 0
+    //return ((cosas.all({c => c.peso()}).sum()) % 2) == 0
+    return cosas.all({c => c.peso() % 2 == 0})
   }
 
   method hayAlgoQuePese(kilos) {
@@ -36,7 +44,8 @@ object camion {
   }
 
   method pesoTotal() {
-    return tara + (cosas.map({c => c.peso()}).sum())
+    //return tara + (cosas.map({c => c.peso()}).sum())
+    return tara + (cosas.sum({c => c.peso()}))
   }
 
   method estaExcedido() {
@@ -44,16 +53,16 @@ object camion {
   }
 
   method cosaPeligrosa(peligrosidad) {
-    return if (self.hayCosaPeligrosa(peligrosidad)){
+    return //if (self.hayCosaPeligrosa(peligrosidad)){
       cosas.find({c => c.nivelPeligrosidad() == peligrosidad})
-    } else{
-      self.error("El camión no cuenta con un artículo peligroso :) ")
-    }
+    //} else{
+    //  self.error("El camión no cuenta con un artículo peligroso :) ")
+    //}
   }
 
-  method hayCosaPeligrosa(peligrosidad) {
-    return cosas.any({c => c.nivelPeligrosidad() == peligrosidad})
-  }
+  //method hayCosaPeligrosa(peligrosidad) {
+  //  return cosas.any({c => c.nivelPeligrosidad() == peligrosidad})
+  //}
 
   method cosasPeligrosas(peligrosidad) {
     return cosas.filter({c => c.nivelPeligrosidad() > peligrosidad})
@@ -69,15 +78,12 @@ object camion {
   }
 
   method tieneAlgoQuePeseEntre(minimo, maximo) {
-    return cosas.any({c => c.peso() >= minimo && c.peso() <= maximo})
+    //return cosas.any({c => c.peso() >= minimo && c.peso() <= maximo})
+    return cosas.any({c => c.peso().between(minimo, maximo)})
   }
 
   method cosaMasPesada() {
-    return if (cosas.isEmpty()){
-      self.error("El camión no cuenta con algo pesado :(")
-    } else{
-        cosas.max({c => c.peso()})
-      }
+    return cosas.max({c => c.peso()})
   }
 
   method listadoDePesos() {
@@ -94,10 +100,13 @@ object camion {
   }
 
   method transportar(destino, camino) {
-    if (camino.puedeCircular(self)){
-      destino.almacenarCosas(cosas)
-    } else{
-      self.error("El camino no puede soportar el Viaje :(")
+    self.puedeSoportar(camino)
+    destino.almacenarCosas(cosas)
+  }
+
+  method puedeSoportar(camino) {
+    if (camino.puedeCircular()){
+      self.error("El camino no puede soportar el viaje.")
     }
   }
 }
@@ -206,20 +215,16 @@ object paqueteDeLadrillos {
   }
 
   method sufreAccidente() {
-    if (cantidadDeLadrillos >= 12){
-      cantidadDeLadrillos = 12 - cantidadDeLadrillos
-    } else{
-      cantidadDeLadrillos = 0
-    }
+    cantidadDeLadrillos = (cantidadDeLadrillos - 12).max(0)
   }
 }
 
 object bateriaAntiaerea {
-  var tieneMisiles = false
+  var estado = descargado
 
 
   method peso() {
-	  return if (tieneMisiles) {
+	  return if (estado.estaCargado()) {
 		  300
 	  } else {
 	  	200
@@ -227,7 +232,7 @@ object bateriaAntiaerea {
   }
 
   method nivelPeligrosidad() {
-	  return if (tieneMisiles){
+	  return if (estado.estaCargado()){
 	  	100
 	  } else {
 	  	0
@@ -235,11 +240,15 @@ object bateriaAntiaerea {
   }
 
   method portaMisiles() {
-	  tieneMisiles = not tieneMisiles
+	  if (estado.estaCargado()){
+      estado = descargado
+    }else{
+      estado = cargado
+    }
   }
 
   method totalBultos() {
-    return if (not tieneMisiles){
+    return if (estado.estaDescargado()){
       1
     } else{
       2
@@ -247,9 +256,31 @@ object bateriaAntiaerea {
   }
 
   method sufreAccidente() {
-   tieneMisiles = not tieneMisiles 
+   estado = descargado  
   }
 }
+// ===============
+object cargado {
+  method estaCargado() { 
+    return true 
+  }
+
+  method estaDescargado() { 
+    return false 
+  }
+}
+
+object descargado {
+  method estaCargado() { 
+    return false 
+  }
+
+  method estaDescargado() { 
+    return true
+  }
+}
+// ===============
+
 
 object residuosRadioactivos {
   var peso = 0

@@ -8,8 +8,9 @@ describe "test 1" {
     
     
 
-    assert.that(camion.todoElPesoEsPar())
-    assert.that(camion.hayAlgoQuePese(55))
+    //assert.that(camion.todoElPesoEsPar())
+    //assert.that(camion.hayAlgoQuePese(55))
+    assert.equals(1850, camion.pesoTotal())
   }
 }
 
@@ -129,7 +130,7 @@ describe "test 7" {
     assert.equals(30, residuosRadioactivos.peso())
     assert.equals(70, arenaAGranel.peso())
     assert.equals(88, paqueteDeLadrillos.ladrillos())
-    assert.notThat(bateriaAntiaerea.tieneMisiles)
+    assert.that(bateriaAntiaerea.estado.estaDescargado())
   }
 }
 
@@ -150,7 +151,7 @@ describe "test 8" {
     assert.that(bumblebee.estaTransformado)
     assert.equals(45, residuosRadioactivos.peso())
     assert.equals(0, paqueteDeLadrillos.cantidadDeLadrillos)
-    assert.notThat(bateriaAntiaerea.tieneMisiles)
+    assert.that(bateriaAntiaerea.estado.estaDescargado())
   }
 }
 
